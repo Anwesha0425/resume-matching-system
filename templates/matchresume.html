@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Semantic Resume Matcher</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        textarea, input[type="file"] {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        input[type="file"] {
+            padding: 0.8rem;
+        }
+        
+        input[type="file"]::file-selector-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 1rem;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        input[type="file"]::file-selector-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Results Section */
+        .results-container {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--card-border);
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+        
+        .results-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .candidate-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s ease, background 0.3s;
+        }
+
+        .candidate-card:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .candidate-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .score-container {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            width: 40%;
+        }
+
+        .progress-bar-bg {
+            flex-grow: 1;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .score-text {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #c4b5fd;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* Loading state */
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .glass-card { padding: 2rem; }
+            h1 { font-size: 2.2rem; }
+            .candidate-card { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .score-container { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="glass-card">
+            
+            <div class="header">
+                <h1>AI Semantic Matcher</h1>
+                <p>Upload resumes and provide a job description to find the best matching candidates using deep learning.</p>
+            </div>
+
+            <form method="POST" action="/matcher" enctype="multipart/form-data" id="matchForm">
+                <div class="form-group">
+                    <label for="job_description">Job Description</label>
+                    <textarea id="job_description" name="job_description" rows="6" placeholder="Paste the full job description here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="resumes">Candidate Resumes (PDF, DOCX, TXT)</label>
+                    <input type="file" id="resumes" name="resumes" multiple required accept=".pdf, .docx, .txt">
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">Analyze Candidates</button>
+            </form>
+
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <p style="color: var(--text-muted);">Generating semantic embeddings... This may take a moment.</p>
+            </div>
+
+            {% if message %}
+                {% if top_resumes %}
+                <div class="results-container">
+                    <h2 class="results-title">{{ message }}</h2>
+                    
+                    {% for index in range(top_resumes|length) %}
+                    <div class="candidate-card">
+                        <div class="candidate-info">
+                            <h3>{{ top_resumes[index] }}</h3>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Candidate {{ index + 1 }}</span>
+                        </div>
+                        <div class="score-container">
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: 0%;" data-target="{{ similarity_scores[index] }}%"></div>
+                            </div>
+                            <div class="score-text">{{ similarity_scores[index] }}%</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="results-container" style="text-align: center;">
+                    <p style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px;">{{ message }}</p>
+                </div>
+                {% endif %}
+            {% endif %}
+
+        </div>
+    </div>
+
+    <script>
+        // Form submission loader
+        const form = document.getElementById('matchForm');
+        const loader = document.getElementById('loader');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if(form) {
+            form.addEventListener('submit', () => {
+                submitBtn.style.display = 'none';
+                loader.style.display = 'block';
+            });
+        }
+
+        // Animate progress bars on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const progressBars = document.querySelectorAll('.progress-bar-fill');
+                progressBars.forEach(bar => {
+                    const target = bar.getAttribute('data-target');
+                    bar.style.width = target;
+                });
+            }, 300);
+        });
+    </script>
+</body>
+</html>
