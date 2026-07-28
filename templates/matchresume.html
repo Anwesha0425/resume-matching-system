@@ -263,9 +263,12 @@
                     <textarea id="job_description" name="job_description" rows="6" placeholder="Paste the full job description here..." required></textarea>
                 </div>
 
+
+
                 <div class="form-group">
-                    <label for="resumes">Candidate Resumes (PDF, DOCX, TXT)</label>
-                    <input type="file" id="resumes" name="resumes" multiple required accept=".pdf, .docx, .txt">
+                    <label for="resumes">Upload New Candidates (Optional)</label>
+                    <input type="file" id="resumes" name="resumes" multiple accept=".pdf, .docx, .txt">
+                    <small style="color: var(--text-muted); display: block; margin-top: 0.5rem; font-size: 0.85rem;">If no files are selected, the system will search through all previously saved candidates in the database.</small>
                 </div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">Analyze Candidates</button>
@@ -273,7 +276,7 @@
 
             <div class="loader" id="loader">
                 <div class="spinner"></div>
-                <p style="color: var(--text-muted);">Generating semantic embeddings... This may take a moment.</p>
+                <p style="color: var(--text-muted);">Generating semantic embeddings and AI insights... This may take a minute.</p>
             </div>
 
             {% if message %}
@@ -282,17 +285,51 @@
                     <h2 class="results-title">{{ message }}</h2>
                     
                     {% for index in range(top_resumes|length) %}
-                    <div class="candidate-card">
-                        <div class="candidate-info">
-                            <h3>{{ top_resumes[index] }}</h3>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">Candidate {{ index + 1 }}</span>
-                        </div>
-                        <div class="score-container">
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 0%;" data-target="{{ similarity_scores[index] }}%"></div>
+                    <div class="candidate-card" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div class="candidate-info">
+                                <h3>{{ top_resumes[index] }}</h3>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Candidate {{ index + 1 }}</span>
                             </div>
-                            <div class="score-text">{{ similarity_scores[index] }}%</div>
+                            <div class="score-container">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" style="width: 0%;" data-target="{{ similarity_scores[index] }}%"></div>
+                                </div>
+                                <div class="score-text">{{ similarity_scores[index] }}%</div>
+                            </div>
                         </div>
+                        
+                        {% if ai_insights and ai_insights[index] %}
+                        <div class="ai-insights" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--card-border);">
+                            {% if ai_insights[index].error %}
+                                <p style="color: #fca5a5; font-size: 0.9rem;">⚠️ {{ ai_insights[index].error }}</p>
+                            {% else %}
+                                <div>
+                                    <h4 style="color: #c4b5fd; margin-bottom: 0.5rem; font-size: 1rem;">🤖 AI Reasoning</h4>
+                                    <p style="font-size: 0.95rem; line-height: 1.5; color: #e2e8f0; margin-bottom: 1rem;">{{ ai_insights[index].match_reasoning }}</p>
+                                </div>
+                                
+                                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <h4 style="color: #6ee7b7; margin-bottom: 0.5rem; font-size: 0.9rem;">✅ Extracted Skills</h4>
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            {% for skill in ai_insights[index].extracted_skills %}
+                                            <span style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem;">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <h4 style="color: #fca5a5; margin-bottom: 0.5rem; font-size: 0.9rem;">❌ Missing Skills</h4>
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            {% for skill in ai_insights[index].missing_skills %}
+                                            <span style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem;">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>

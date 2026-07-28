@@ -2,6 +2,9 @@ import os
 import docx2txt
 import PyPDF2
 from sentence_transformers import SentenceTransformer, util
+import spacy
+import json
+from taxonomy import SKILLS_TAXONOMY
 
 # Load the SentenceTransformer model
 # all-MiniLM-L6-v2 provides a great balance of speed and performance for semantic search
@@ -65,3 +68,53 @@ def get_similarity_scores(job_description, resumes_text):
     
     # Return as list of floats
     return cosine_scores.tolist()
+
+# Try to load spaCy model
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    # Fallback if model not downloaded yet
+    nlp = None
+
+def extract_skills_from_text(text):
+    if nlp is None:
+        return set()
+    doc = nlp(text.lower())
+    skills = set()
+    for token in doc:
+        # Extract meaningul nouns and cross-reference with strict taxonomy
+        if token.pos_ in ['PROPN', 'NOUN', 'X'] and len(token.text) > 1:
+            if token.text in SKILLS_TAXONOMY:
+                skills.add(token.text)
+                
+    # Also check for multi-word skills in taxonomy (e.g., 'machine learning')
+    text_lower = text.lower()
+    for skill in SKILLS_TAXONOMY:
+        if " " in skill and skill in text_lower:
+            skills.add(skill)
+            
+    return skills
+
+def analyze_resume_with_llm(job_description, resume_text):
+    """
+    Uses local NLP (spaCy) to extract skills instead of an LLM.
+    Returns the same dictionary structure as the old LLM function.
+    """
+    job_skills = extract_skills_from_text(job_description)
+    resume_skills = extract_skills_from_text(resume_text)
+    
+    extracted = list(job_skills.intersection(resume_skills))
+    missing = list(job_skills.difference(resume_skills))
+    
+    # Sort and limit output
+    extracted = sorted(extracted)[:12]
+    missing = sorted(missing)[:8]
+    
+    reasoning = f"Local Analysis: Candidate matches {len(extracted)} key terms found in the job description. " \
+                f"There are approximately {len(missing)} keywords present in the JD that are not explicitly found in this resume."
+                
+    return {
+        "extracted_skills": extracted,
+        "missing_skills": missing,
+        "match_reasoning": reasoning
+    }
