@@ -35,6 +35,12 @@ def matcher():
                 # Extract skills and save to DB
                 skills = extract_skills_from_text(text)
                 add_candidate(filename, text, skills)
+                
+                # Clean up the file to save disk space on ephemeral cloud storage
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    print(f"Error removing file {filepath}: {e}")
 
         # 2. Fetch ALL candidates from the database
         all_candidates = get_all_candidates()

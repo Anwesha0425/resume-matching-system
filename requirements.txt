@@ -1,0 +1,8 @@
+Flask
+Werkzeug
+numpy
+PyPDF2
+docx2txt
+sentence_transformers
+spacy
+gunicorn
