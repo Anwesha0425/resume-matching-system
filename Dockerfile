@@ -28,5 +28,5 @@ EXPOSE 5000
 # Create uploads directory
 RUN mkdir -p uploads
 
-# Command to run the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "main:app"]
+# Command to run the application using Gunicorn (1 worker to save RAM on free tiers)
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "2", "--timeout", "120", "main:app"]
