@@ -1,3 +1,12 @@
+---
+title: Resume Matching System
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Resume Matching System 🚀
 
 An advanced, machine-learning-powered Resume Matching System built to seamlessly match candidate resumes against job descriptions. It utilizes a **local NLP pipeline**, **semantic vector search**, and an **embedded SQLite database** to ensure 100% offline functionality, data privacy, and zero API costs.
