@@ -5,7 +5,7 @@ import numpy as np
 from utils import extract_text, get_similarity_scores, analyze_resume_with_llm, extract_skills_from_text
 from db import init_db, add_candidate, get_all_candidates
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
