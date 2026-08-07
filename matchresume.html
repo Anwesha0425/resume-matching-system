@@ -239,11 +239,76 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Chat Section */
+        .chat-container {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--card-border);
+        }
+        
+        .chat-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #a5b4fc;
+        }
+
+        .chat-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 100px;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input-group input {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+
+        .chat-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-ask {
+            padding: 0 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-ask:hover {
+            background: var(--primary-hover);
+        }
+
         @media (max-width: 768px) {
             .glass-card { padding: 2rem; }
             h1 { font-size: 2.2rem; }
             .candidate-card { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .score-container { width: 100%; }
+            .chat-input-group { flex-direction: column; }
+            .btn-ask { padding: 1rem; }
         }
     </style>
 </head>
@@ -339,6 +404,19 @@
                 </div>
                 {% endif %}
             {% endif %}
+            
+            <!-- Chat with Candidate Pool (RAG) -->
+            <div class="chat-container">
+                <h2 class="chat-title">💬 Chat with your Candidate Pool</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Ask questions about all candidates in the database using Gemini AI (e.g. "Who has the most experience with Python?").</p>
+                
+                <div class="chat-box" id="chatResponse">Ask a question to see the AI's response here...</div>
+                
+                <div class="chat-input-group">
+                    <input type="text" id="chatQuery" placeholder="Ask a question about your candidates...">
+                    <button class="btn-ask" id="askBtn">Ask AI</button>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -365,6 +443,47 @@
                     bar.style.width = target;
                 });
             }, 300);
+        });
+
+        // Chat functionality
+        const askBtn = document.getElementById('askBtn');
+        const chatQuery = document.getElementById('chatQuery');
+        const chatResponse = document.getElementById('chatResponse');
+
+        askBtn.addEventListener('click', async () => {
+            const query = chatQuery.value.trim();
+            if (!query) return;
+
+            chatResponse.innerHTML = '<span style="color: var(--text-muted);">Thinking...</span>';
+            askBtn.disabled = true;
+            askBtn.style.opacity = '0.5';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+                chatResponse.textContent = data.answer || "No response generated.";
+            } catch (error) {
+                chatResponse.textContent = "Error communicating with server.";
+                console.error("Chat Error:", error);
+            } finally {
+                askBtn.disabled = false;
+                askBtn.style.opacity = '1';
+                chatQuery.value = '';
+            }
+        });
+
+        // Allow pressing Enter to ask
+        chatQuery.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                askBtn.click();
+            }
         });
     </script>
 </body>

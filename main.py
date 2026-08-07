@@ -1,9 +1,13 @@
 from flask import Flask, request, render_template, redirect, url_for
 from werkzeug.utils import secure_filename
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import numpy as np
 from utils import extract_text, get_similarity_scores, analyze_resume_with_llm, extract_skills_from_text
 from db import init_db, add_candidate, get_all_candidates
+from rag_pipeline import ask_candidates_question
 
 app = Flask(__name__, template_folder='.')
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -83,6 +87,19 @@ def matcher():
                                ai_insights=ai_insights)
 
     return render_template('matchresume.html')
+
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    data = request.get_json()
+    query = data.get('query', '')
+    
+    if not query:
+        return {"answer": "Please ask a valid question."}
+        
+    all_candidates = get_all_candidates()
+    answer = ask_candidates_question(query, all_candidates)
+    
+    return {"answer": answer}
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):

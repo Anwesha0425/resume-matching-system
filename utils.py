@@ -95,26 +95,10 @@ def extract_skills_from_text(text):
             
     return skills
 
+from rag_pipeline import generate_resume_insights
+
 def analyze_resume_with_llm(job_description, resume_text):
     """
-    Uses local NLP (spaCy) to extract skills instead of an LLM.
-    Returns the same dictionary structure as the old LLM function.
+    Uses the Gemini LLM via LangChain to extract skills and provide matching reasoning.
     """
-    job_skills = extract_skills_from_text(job_description)
-    resume_skills = extract_skills_from_text(resume_text)
-    
-    extracted = list(job_skills.intersection(resume_skills))
-    missing = list(job_skills.difference(resume_skills))
-    
-    # Sort and limit output
-    extracted = sorted(extracted)[:12]
-    missing = sorted(missing)[:8]
-    
-    reasoning = f"Local Analysis: Candidate matches {len(extracted)} key terms found in the job description. " \
-                f"There are approximately {len(missing)} keywords present in the JD that are not explicitly found in this resume."
-                
-    return {
-        "extracted_skills": extracted,
-        "missing_skills": missing,
-        "match_reasoning": reasoning
-    }
+    return generate_resume_insights(job_description, resume_text)

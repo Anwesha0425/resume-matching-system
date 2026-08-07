@@ -6,3 +6,7 @@ docx2txt
 sentence_transformers
 spacy
 gunicorn
+langchain
+langchain-google-genai
+faiss-cpu
+python-dotenv
